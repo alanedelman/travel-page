@@ -1,0 +1,30 @@
+name: Deploy travel page
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - travel.html
+      - .github/workflows/deploy.yml
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.LAURENT_SSH_KEY }}" > ~/.ssh/laurent_key
+          chmod 600 ~/.ssh/laurent_key
+          ssh-keyscan -H laurent.mit.edu >> ~/.ssh/known_hosts
+
+      - name: Publish travel page
+        run: |
+          scp -i ~/.ssh/laurent_key travel.html edelman@laurent.mit.edu:~/www/travel.html
